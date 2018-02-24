@@ -1,2 +1,2 @@
-include sbm/scripts/sbm
+include btrfscleaner/scripts/btrfs-cleaner
 include README.md
