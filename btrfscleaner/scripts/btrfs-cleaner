@@ -2,5 +2,5 @@
 # vim: nonu noet ai sm ts=4 sw=4
 
 if __name__ == '__main__':
-	import	scrub_btrfs
-	exit( BtrfsCleaner().main() )
+	import	btrfscleaner
+	exit( btrfscleaner.BtrfsCleaner().main() )

@@ -16,9 +16,41 @@ except:
 
 class	BtrfsCleaner( object ):
 
-	def	log( self, s, priority = syslog.LOG_ERR ):
-		syslog.syslog( priority, s )
+	def	log( self, s, pri = syslog.LOG_ERR ):
+		if self.out:
+			print >>self.out, s
+		syslog.syslog( pri, s )
 		return
+
+	def	select( self ):
+		# See which BTRFS (sub)volumes are mounted
+		mp_to_uuid = dict()
+		with open( '/proc/mounts' ) as f:
+			for line in f:
+				tokens = line.split()
+				mp = tokens[ 1 ]
+				fs = tokens[ 2 ]
+				if fs == 'btrfs':
+					mp_to_uuid[ mp ] = None
+		# See which UUID mounts that in /etc/fstab
+		with open( '/etc/fstab' ) as f:
+			for line in f:
+				tokens = [
+					t for t in shlex.split(
+						line,
+						posix    = True,
+						comments = True,
+					)
+				]
+				if len( tokens ) >= 3:
+					device = tokens[ 0 ]
+					mp     = tokens[ 1 ]
+					fs     = tokens[ 2 ]
+					if mp in mp_to_uuid:
+						if fs == 'btrfs' and device.startswith( 'UUID=' ):
+							uuid = device[ 5: ]
+							mp_to_uuid[ mp ] = uuid
+		return mp_to_uuid
 
 	def	__init__(
 		self
@@ -29,20 +61,10 @@ class	BtrfsCleaner( object ):
 			syslog.LOG_PID,
 			syslog.LOG_DAEMON,
 		)
+		self.out = None
 		# Record simple options
 		self.opts      = bunch.Bunch()
 		self.opts.dont = False
-		# Import /etc/fstab entries of interest
-		self.btrfs     = dict()
-		with open( '/etc/fstab' ) as f:
-			for line in f:
-				fields = shlex.split(
-					line,
-					comments = True,
-					posix    = True
-				)
-				if len(fields) >= 4 and fields[2] == 'btrfs':
-					self.btrfs[ fields[ 1 ] ] = fields
 		return
 
 	def	filesystem( self ):
@@ -57,14 +79,15 @@ class	BtrfsCleaner( object ):
 		)
 		err = None
 		if self.opts.dont:
-			output = cli
+			self.log( cli, syslog.LOG_NOTICE )
+			output = None
 		else:
 			if self.opts.verbose:
 				print cli
 			try:
-				output = subprocess.check_output( cmd )
+				output = [ subprocess.check_output( cmd ) ]
 			except subprocess.CalledProcessError, e:
-				output = e.output
+				output = [ e.output ]
 				err = [
 					cli,
 					'Exit code {0}'.format( e.returncode ),
@@ -72,23 +95,24 @@ class	BtrfsCleaner( object ):
 			except Exception, e:
 				print '*** {0}:{1} ***'.format( e.returncode, e.output )
 				raise e
-		return [ output ], err
+		return output, err
 
 	def	show( self, output = None, err = None ):
-		if output:
+		fmt = '    {0:<2} {1}'
+		if output and len(output):
 			for part in output:
 				for line in part.splitlines():
-					print '  {0}'.format( line )
-		if err:
+					print fmt.format( '', line )
+		if err and len(err):
 			for part in err:
 				for line in part.splitlines():
-					print '* {0}'.format( line )
+					print fmt.format( '*', line )
 		return
 
 	def	report( self ):
 		pass
 
-	def	do_scrub( self, fs ):
+	def	do_scrub( self, mp ):
 		# Scrub it
 		cmd = [
 			'/sbin/btrfs',
@@ -97,29 +121,29 @@ class	BtrfsCleaner( object ):
 			'-B',
 			'-d',
 			'-f',
-			fs
+			mp
 		]
 		output, err = self.run( cmd )
 		self.show( output, err )
 		return
 
-	def	do_balance( self, fs ):
+	def	do_balance( self, mp ):
 		# Balance it
 		cmd = [
 			'/sbin/btrfs',
 			'balance',
 			'start',
 			'-dusage=75',
-			'-dlimit=8',
+			'-dlimit=32',
 			'-musage=80',
 			'-mlimit=32',
-			fs
+			mp
 		]
 		output, err = self.run( cmd )
 		self.show( output, err )
 		return
 
-	def	do_defragment( self, fs ):
+	def	do_defrag( self, mp ):
 		# Defrag
 		cmd = [
 			'/sbin/btrfs',
@@ -127,7 +151,7 @@ class	BtrfsCleaner( object ):
 			'defragment',
 			'-f',
 			'-r',
-			mountpoint
+			mp
 		]
 		output, err = self.run( cmd )
 		self.show( output, err )
@@ -139,7 +163,13 @@ class	BtrfsCleaner( object ):
 		)[0]
 		p = argparse.ArgumentParser(
 			prog        = prog,
-			description = 'Scrub btrfs filesystems in background'
+			description = '''\
+				Scrub btrfs filesystems in background
+			''',
+			epilog = '''\
+				If no action (defrag, balance, or scrub) is specified then
+				all three actions will be performed.
+			'''
 		)
 		p.add_argument(
 			'-b',
@@ -162,6 +192,12 @@ class	BtrfsCleaner( object ):
 			default = False,
 			action  = 'store_true',
 			help    = 'print what would be done'
+		)
+		p.add_argument(
+			'-o',
+			'--out',
+			dest = 'ofile',
+			help = 'output here if not stdout',
 		)
 		p.add_argument(
 			'-s',
@@ -191,35 +227,62 @@ class	BtrfsCleaner( object ):
 			help = 'filesystems to scrub'
 		)
 		self.opts = p.parse_args()
-		if len( self.opts.filesystems ) == 0:
-			self.opts.filesystems = self.btrfs
+		if os.getuid() != 0:
+			print >>sys.stderr, 'Not running as root; expect troubles.'
 		#
-		if not any(
+		ofile = self.opts.ofile
+		self.out = open( ofile, 'wt' ) if ofile else sys.stdout
+		#
+		mp_to_uuid = self.select()
+		if len( self.opts.filesystems ) == 0:
+			self.opts.filesystems = mp.to_uuid.keys()
+		#
+		if not any((
 			self.opts.balance,
 			self.opts.defrag,
 			self.opts.scrub,
-		):
+		)):
 			self.opts.balance = True
 			self.opts.defrag  = True
 			self.opts.scrub   = True
 		#
-		for mountpoint in sorted( self.opts.filesystems ):
-			title = 'Mountpoint: {0}'.format( mountpoint )
+		title = 'BTRFS Cleaning'
+		print title
+		print '=' * len( title )
+		uuid_already_done = dict()
+		for mp in sorted( self.opts.filesystems ):
+			uuid = mp_to_uuid[ mp ]
+			if uuid in uuid_already_done:
+				print >>sys.stderr, 'Skipping {0}, already done {1}'.format(
+					mp,
+					uuid,
+				)
+				continue
+			uuid_already_done[ uuid ] = mp
+			title = 'Mountpoint: {0}'.format( mp )
+			print
 			print
 			print title
 			print '-' * len( title )
-			print
-			if mountpoint not in self.btrfs:
-				print >>sys.stderr, '{0} is not a BTRFS mount.'.format(
-					mountpoint
-				)
-				continue
+			step = 0
 			if self.opts.scrub:
-				self.do_scrub( mountpoint )
+				step += 1
+				print
+				print '{0}. Scrubbing'.format( step )
+				print
+				self.do_scrub( mp )
 			if self.opts.balance:
-				self.do_balance( mountpount )
+				step += 1
+				print
+				print '{0}. Balancing'.format( step )
+				print
+				self.do_balance( mp )
 			if self.opts.defrag:
-				self.do_defrag( mountpoint )
+				step += 1
+				print
+				print '{0}. Defragmenting'.format( step )
+				print
+				self.do_defrag( mp )
 		return 0
 
 if __name__ == '__main__':
