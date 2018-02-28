@@ -16,23 +16,40 @@ except:
 
 class	BtrfsCleaner( object ):
 
+	def	fmt_code( self, s ):
+		return '    {0}'.format( s )
+
 	def	log( self, s, pri = syslog.LOG_ERR ):
 		if self.out:
-			print >>self.out, s
+			print >>self.out, self.fmt_code( s )
 		syslog.syslog( pri, s )
 		return
 
+	def	new_node( self, mp = None, uuid = None ):
+		return bunch.Bunch( mp = mp, uuid = uuid )
+
 	def	select( self ):
+		#
+		self.uuids = dict()
+		rootdir = '/sys/fs/btrfs'
+		for uuid in os.listdir( rootdir ):
+			fs = os.path.join(
+				rootdir,
+				uuid,
+				'label'
+			)
+			if os.path.exists( fs ):
+				self.uuids[ uuid ] = list()
 		# See which BTRFS (sub)volumes are mounted
-		mp_to_uuid = dict()
+		self.mounts = dict()
 		with open( '/proc/mounts' ) as f:
 			for line in f:
 				tokens = line.split()
 				mp = tokens[ 1 ]
 				fs = tokens[ 2 ]
 				if fs == 'btrfs':
-					mp_to_uuid[ mp ] = None
-		# See which UUID mounts that in /etc/fstab
+					self.mounts[ mp ] = self.new_node( mp = mp )
+		# See which /etc/fstab BTRFS partitions are mounted
 		with open( '/etc/fstab' ) as f:
 			for line in f:
 				tokens = [
@@ -43,14 +60,15 @@ class	BtrfsCleaner( object ):
 					)
 				]
 				if len( tokens ) >= 3:
-					device = tokens[ 0 ]
-					mp     = tokens[ 1 ]
-					fs     = tokens[ 2 ]
-					if mp in mp_to_uuid:
-						if fs == 'btrfs' and device.startswith( 'UUID=' ):
-							uuid = device[ 5: ]
-							mp_to_uuid[ mp ] = uuid
-		return mp_to_uuid
+					uuid = tokens[ 0 ]
+					mp   = tokens[ 1 ]
+					fs   = tokens[ 2 ]
+					if uuid.startswith( 'UUID=' ):
+						if mp in self.mounts:
+							uuid = uuid[ 5: ]
+							self.uuids[ uuid ].append( mp )
+							self.mounts[ mp ].uuid = uuid
+		return
 
 	def	__init__(
 		self
@@ -79,17 +97,20 @@ class	BtrfsCleaner( object ):
 		)
 		err = None
 		if self.opts.dont:
-			self.log( cli, syslog.LOG_NOTICE )
-			output = None
+			output = [ cli ]
 		else:
+			output = []
 			if self.opts.verbose:
-				print cli
+				output += [ cli ]
 			try:
-				output = [ subprocess.check_output( cmd ) ]
+				output += [
+					subprocess.check_output(
+						cmd,
+						stderr = subprocess.STDOUT,
+					)
+				]
 			except subprocess.CalledProcessError, e:
-				output = [ e.output ]
-				err = [
-					cli,
+				err = [ e.output ] +  [
 					'Exit code {0}'.format( e.returncode ),
 				]
 			except Exception, e:
@@ -98,15 +119,15 @@ class	BtrfsCleaner( object ):
 		return output, err
 
 	def	show( self, output = None, err = None ):
-		fmt = '    {0:<2} {1}'
+		fmt = '{0:<2} {1}'
 		if output and len(output):
 			for part in output:
 				for line in part.splitlines():
-					print fmt.format( '', line )
+					print self.fmt_code( fmt.format( '', line ) )
 		if err and len(err):
 			for part in err:
 				for line in part.splitlines():
-					print fmt.format( '*', line )
+					print self.fmt_code( fmt.format( '**', line ) )
 		return
 
 	def	report( self ):
@@ -233,9 +254,9 @@ class	BtrfsCleaner( object ):
 		ofile = self.opts.ofile
 		self.out = open( ofile, 'wt' ) if ofile else sys.stdout
 		#
-		mp_to_uuid = self.select()
+		self.select()
 		if len( self.opts.filesystems ) == 0:
-			self.opts.filesystems = mp.to_uuid.keys()
+			self.opts.filesystems = [ self.uuids[u][0] for u in self.uuids ]
 		#
 		if not any((
 			self.opts.balance,
@@ -249,16 +270,21 @@ class	BtrfsCleaner( object ):
 		title = 'BTRFS Cleaning'
 		print title
 		print '=' * len( title )
-		uuid_already_done = dict()
+		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
-			uuid = mp_to_uuid[ mp ]
-			if uuid in uuid_already_done:
+			if mp not in self.mounts:
+				print >>sys.std, 'Not a mount point: {0}'.format(
+					mp
+				)
+				continue
+			uuid = self.mounts[ mp ].uuid
+			if uuid in uuids_already_processed:
 				print >>sys.stderr, 'Skipping {0}, already done {1}'.format(
 					mp,
 					uuid,
 				)
 				continue
-			uuid_already_done[ uuid ] = mp
+			uuids_already_processed[ uuid ] = mp
 			title = 'Mountpoint: {0}'.format( mp )
 			print
 			print
@@ -271,18 +297,18 @@ class	BtrfsCleaner( object ):
 				print '{0}. Scrubbing'.format( step )
 				print
 				self.do_scrub( mp )
-			if self.opts.balance:
-				step += 1
-				print
-				print '{0}. Balancing'.format( step )
-				print
-				self.do_balance( mp )
 			if self.opts.defrag:
 				step += 1
 				print
 				print '{0}. Defragmenting'.format( step )
 				print
 				self.do_defrag( mp )
+			if self.opts.balance:
+				step += 1
+				print
+				print '{0}. Balancing'.format( step )
+				print
+				self.do_balance( mp )
 		return 0
 
 if __name__ == '__main__':
