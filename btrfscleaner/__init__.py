@@ -151,7 +151,7 @@ class	BtrfsCleaner( object ):
 
 	def	do_balance( self, mp ):
 		# Balance it
-		for fill in [ int(x) for x in self.opts.filled.split() ]:
+		for fill in self.opts.filled:
 			cmd = [
 				'/sbin/btrfs',
 				'balance',
@@ -294,7 +294,7 @@ class	BtrfsCleaner( object ):
 		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
 			if mp not in self.mounts:
-				print >>sys.std, 'Not a mount point: {0}'.format(
+				print >>sys.stderr, 'Not a mount point: {0}'.format(
 					mp
 				)
 				continue
