@@ -312,24 +312,27 @@ class	BtrfsCleaner( object ):
 			print title
 			print '-' * len( title )
 			step = 0
+			# Make sure we can belive the filesystem metadata
 			if self.opts.scrub:
 				step += 1
 				print
 				print '{0}. Scrubbing'.format( step )
 				print
 				self.do_scrub( mp )
-			if self.opts.defrag:
-				step += 1
-				print
-				print '{0}. Defragmenting'.format( step )
-				print
-				self.do_defrag( mp )
+			# Repack the filesystem to maximize free space
 			if self.opts.balance:
 				step += 1
 				print
 				print '{0}. Balancing'.format( step )
 				print
 				self.do_balance( mp )
+			# Consolidate file disk usage
+			if self.opts.defrag:
+				step += 1
+				print
+				print '{0}. Defragmenting'.format( step )
+				print
+				self.do_defrag( mp )
 		return 0
 
 if __name__ == '__main__':
