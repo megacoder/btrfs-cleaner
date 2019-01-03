@@ -79,10 +79,11 @@ class	BtrfsCleaner( object ):
 			syslog.LOG_PID,
 			syslog.LOG_DAEMON,
 		)
-		self.out = None
+		self.out         = None
 		# Record simple options
-		self.opts      = bunch.Bunch()
-		self.opts.dont = False
+		self.opts        = bunch.Bunch()
+		self.opts.dont   = False
+		self.opts.filled = "1 2 3 5 7 10 15 20 30 40 50 60 70 80 90 100"
 		return
 
 	def	filesystem( self ):
@@ -150,18 +151,19 @@ class	BtrfsCleaner( object ):
 
 	def	do_balance( self, mp ):
 		# Balance it
-		cmd = [
-			'/sbin/btrfs',
-			'balance',
-			'start',
-			'-dusage=75',
-			'-dlimit=32',
-			'-musage=80',
-			'-mlimit=32',
-			mp
-		]
-		output, err = self.run( cmd )
-		self.show( output, err )
+		for fill in [ int(x) for x in self.opts.filled.split() ]:
+			cmd = [
+				'/sbin/btrfs',
+				'balance',
+				'start',
+				'-dusage={0}'.format( fill ),
+#				'-dlimit=32',
+				'-musage={0}'.format( fill ),
+#				'-mlimit=32',
+				mp
+			]
+			output, err = self.run( cmd )
+			self.show( output, err )
 		return
 
 	def	do_defrag( self, mp ):
@@ -191,6 +193,13 @@ class	BtrfsCleaner( object ):
 				If no action (defrag, balance, or scrub) is specified then
 				all three actions will be performed.
 			'''
+		)
+		p.add_argument(
+			'-F',
+			'--filled',
+			dest    ='filled',
+			help    = 'list of balance points',
+			default = self.opts.filled,
 		)
 		p.add_argument(
 			'-b',
@@ -266,6 +275,18 @@ class	BtrfsCleaner( object ):
 			self.opts.balance = True
 			self.opts.defrag  = True
 			self.opts.scrub   = True
+		#
+		if self.opts.balance:
+			try:
+				a = [
+					int(x) for x in self.opts.filled.split()
+				]
+				self.opts.filled = a
+			except:
+				print >>sys.stderr, 'Balance points must be numeric: {0}'.format(
+						self.opts.filled,
+					)
+				exit( 1 )
 		#
 		title = 'BTRFS Cleaning'
 		print title
