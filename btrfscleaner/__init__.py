@@ -25,50 +25,24 @@ class	BtrfsCleaner( object ):
 		syslog.syslog( pri, s )
 		return
 
-	def	new_node( self, mp = None, uuid = None ):
-		return bunch.Bunch( mp = mp, uuid = uuid )
+	def	new_node( self, where = None, dev = None ):
+		return bunch.Bunch( where = where, dev = dev )
 
 	def	select( self ):
 		#
-		self.uuids = dict()
-		rootdir = '/sys/fs/btrfs'
-		for uuid in os.listdir( rootdir ):
-			fs = os.path.join(
-				rootdir,
-				uuid,
-				'label'
-			)
-			if os.path.exists( fs ):
-				self.uuids[ uuid ] = list()
-		# See which BTRFS (sub)volumes are mounted
-		self.mounts = dict()
+		# Make a local copy of the active mount table, then reduce it to
+		# a dict of BTRFS mountpoint names.
+		#
 		with open( '/proc/mounts' ) as f:
-			for line in f:
-				tokens = line.split()
-				mp = tokens[ 1 ]
-				fs = tokens[ 2 ]
-				if fs == 'btrfs':
-					self.mounts[ mp ] = self.new_node( mp = mp )
-		# See which /etc/fstab BTRFS partitions are mounted
-		with open( '/etc/fstab' ) as f:
-			for line in f:
-				tokens = [
-					t for t in shlex.split(
-						line,
-						posix    = True,
-						comments = True,
-					)
-				]
-				if len( tokens ) >= 3:
-					uuid = tokens[ 0 ]
-					mp   = tokens[ 1 ]
-					fs   = tokens[ 2 ]
-					if uuid.startswith( 'UUID=' ):
-						if mp in self.mounts:
-							uuid = uuid[ 5: ]
-							self.uuids[ uuid ].append( mp )
-							self.mounts[ mp ].uuid = uuid
-		return
+			mounts = map(
+				str.split,
+				f.readlines(),
+			)
+		mounts[:] = [
+			m[1] for m in mounts if m[2] == 'btrfs'
+		]
+		# print 'mounts={0}'.format( mounts )
+		return mounts
 
 	def	__init__(
 		self
@@ -84,11 +58,6 @@ class	BtrfsCleaner( object ):
 		self.opts        = bunch.Bunch()
 		self.opts.dont   = False
 		self.opts.filled = "1 2 3 5 7 10 15 20 30 40 50 60 70 80 90 100"
-		return
-
-	def	filesystem( self ):
-		for i, key in enumerate( self.btrfs ):
-			yield i, self.btrfs[key]
 		return
 
 	def	run( self, cmd ):
@@ -263,9 +232,9 @@ class	BtrfsCleaner( object ):
 		ofile = self.opts.ofile
 		self.out = open( ofile, 'wt' ) if ofile else sys.stdout
 		#
-		self.select()
+		active_mounts = self.select()
 		if len( self.opts.filesystems ) == 0:
-			self.opts.filesystems = [ self.uuids[u][0] for u in self.uuids ]
+			self.opts.filesystems = sorted( active_mounts )
 		#
 		if not any((
 			self.opts.balance,
@@ -293,19 +262,11 @@ class	BtrfsCleaner( object ):
 		print '=' * len( title )
 		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
-			if mp not in self.mounts:
+			if mp not in active_mounts:
 				print >>sys.stderr, 'Not a mount point: {0}'.format(
 					mp
 				)
 				continue
-			uuid = self.mounts[ mp ].uuid
-			if uuid in uuids_already_processed:
-				print >>sys.stderr, 'Skipping {0}, already done {1}'.format(
-					mp,
-					uuid,
-				)
-				continue
-			uuids_already_processed[ uuid ] = mp
 			title = 'Mountpoint: {0}'.format( mp )
 			print
 			print
