@@ -1,0 +1,327 @@
+BTRFS Cleaning
+==============
+
+
+Filesystems Under Scrutiny
+
+            Total   Exclusive  Set shared  Filename
+          4.55GiB     4.55GiB       0.00B  /home/reynolds
+          5.49GiB     5.49GiB       0.00B  /home/treynold
+          5.22GiB     5.22GiB       0.00B  /mnt/sdb/1
+          5.49GiB     5.49GiB       0.00B  /mnt/sdc/1
+        686.21MiB   686.21MiB       0.00B  /opt
+
+Mountpoint "/home/reynolds"
+---------------------------
+
+
+1. Scrubbing
+
+       scrub device /dev/sdb1 (id 1) done
+       	scrub started at Fri Jan  4 13:58:19 2019 and finished after 00:00:17
+       	total bytes scrubbed: 6.27GiB with 0 errors
+
+2. Filesystem Topology
+
+       Data, single: total=6.01GiB, used=5.22GiB
+       System, DUP: total=64.00MiB, used=16.00KiB
+       Metadata, DUP: total=768.00MiB, used=540.64MiB
+       GlobalReserve, single: total=22.36MiB, used=64.00KiB
+
+3. Balancing
+
+       Balancing 1% usage
+       Done, had to relocate 2 out of 12 chunks
+       Balancing 2% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 3% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 5% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 7% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 10% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 15% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 20% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 30% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 40% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 50% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 60% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 70% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 80% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 90% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 100% usage
+       Done, had to relocate 5 out of 11 chunks
+
+4. Defragmenting (expect errors)
+
+
+5. Done
+
+       Ended    2019-01-04 13:59:42.837592
+       Started  2019-01-04 13:58:19.711847
+       Duration 0:01:23.125745
+
+Mountpoint "/home/treynold"
+---------------------------
+
+
+1. Scrubbing
+
+       scrub device /dev/sdc1 (id 1) done
+       	scrub started at Fri Jan  4 13:59:42 2019 and finished after 00:00:22
+       	total bytes scrubbed: 6.18GiB with 0 errors
+
+2. Filesystem Topology
+
+       Data, single: total=6.01GiB, used=5.52GiB
+       System, DUP: total=64.00MiB, used=16.00KiB
+       Metadata, DUP: total=512.00MiB, used=341.41MiB
+       GlobalReserve, single: total=16.00MiB, used=0.00B
+
+3. Balancing
+
+       Balancing 1% usage
+       Done, had to relocate 2 out of 11 chunks
+       Balancing 2% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 3% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 5% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 7% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 10% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 15% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 20% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 30% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 40% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 50% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 60% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 70% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 80% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 90% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 100% usage
+       Done, had to relocate 5 out of 10 chunks
+
+4. Defragmenting (expect errors)
+
+
+5. Done
+
+       Ended    2019-01-04 14:01:47.087792
+       Started  2019-01-04 13:59:42.837733
+       Duration 0:02:04.250059
+
+Mountpoint "/mnt/sdb/1"
+-----------------------
+
+
+1. Scrubbing
+
+       scrub device /dev/sdb1 (id 1) done
+       	scrub started at Fri Jan  4 14:01:47 2019 and finished after 00:00:15
+       	total bytes scrubbed: 6.27GiB with 0 errors
+
+2. Filesystem Topology
+
+       Data, single: total=7.01GiB, used=5.22GiB
+       System, DUP: total=64.00MiB, used=16.00KiB
+       Metadata, DUP: total=768.00MiB, used=540.64MiB
+       GlobalReserve, single: total=22.36MiB, used=0.00B
+
+3. Balancing
+
+       Balancing 1% usage
+       Done, had to relocate 3 out of 13 chunks
+       Balancing 2% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 3% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 5% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 7% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 10% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 15% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 20% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 30% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 40% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 50% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 60% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 70% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 80% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 90% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 100% usage
+       Done, had to relocate 5 out of 11 chunks
+
+4. Defragmenting (expect errors)
+
+    ** ERROR: defrag failed on /mnt/sdb/1/opt/asclock-gtk/bin/asclock: Text file busy
+    ** ERROR: defrag failed on /mnt/sdb/1/opt/firefox/firefox-bin: Text file busy
+    ** ERROR: defrag failed on /mnt/sdb/1/opt/oracle/mydesktop/mydesktopservice: Text file busy
+    ** total 3 failures
+    ** Exit code 1
+
+5. Done
+
+       Ended    2019-01-04 14:03:42.927835
+       Started  2019-01-04 14:01:47.087870
+       Duration 0:01:55.839965
+
+Mountpoint "/mnt/sdc/1"
+-----------------------
+
+
+1. Scrubbing
+
+       scrub device /dev/sdc1 (id 1) done
+       	scrub started at Fri Jan  4 14:03:42 2019 and finished after 00:00:16
+       	total bytes scrubbed: 6.13GiB with 0 errors
+
+2. Filesystem Topology
+
+       Data, single: total=6.01GiB, used=5.46GiB
+       System, DUP: total=64.00MiB, used=0.00B
+       Metadata, DUP: total=768.00MiB, used=340.59MiB
+       GlobalReserve, single: total=16.00MiB, used=0.00B
+
+3. Balancing
+
+       Balancing 1% usage
+       Done, had to relocate 3 out of 12 chunks
+       Balancing 2% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 3% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 5% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 7% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 10% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 15% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 20% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 30% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 40% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 50% usage
+       Done, had to relocate 1 out of 10 chunks
+       Balancing 60% usage
+       Done, had to relocate 2 out of 10 chunks
+       Balancing 70% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 80% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 90% usage
+       Done, had to relocate 3 out of 10 chunks
+       Balancing 100% usage
+       Done, had to relocate 6 out of 10 chunks
+
+4. Defragmenting (expect errors)
+
+
+5. Done
+
+       Ended    2019-01-04 14:05:47.118658
+       Started  2019-01-04 14:03:42.927968
+       Duration 0:02:04.190690
+
+Mountpoint "/opt"
+-----------------
+
+
+1. Scrubbing
+
+       scrub device /dev/sdb1 (id 1) done
+       	scrub started at Fri Jan  4 14:05:47 2019 and finished after 00:00:16
+       	total bytes scrubbed: 6.27GiB with 0 errors
+
+2. Filesystem Topology
+
+       Data, single: total=6.01GiB, used=5.22GiB
+       System, DUP: total=64.00MiB, used=16.00KiB
+       Metadata, DUP: total=768.00MiB, used=540.58MiB
+       GlobalReserve, single: total=22.30MiB, used=64.00KiB
+
+3. Balancing
+
+       Balancing 1% usage
+       Done, had to relocate 2 out of 12 chunks
+       Balancing 2% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 3% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 5% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 7% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 10% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 15% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 20% usage
+       Done, had to relocate 1 out of 11 chunks
+       Balancing 30% usage
+       Done, had to relocate 2 out of 11 chunks
+       Balancing 40% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 50% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 60% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 70% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 80% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 90% usage
+       Done, had to relocate 3 out of 11 chunks
+       Balancing 100% usage
+       Done, had to relocate 5 out of 11 chunks
+
+4. Defragmenting (expect errors)
+
+    ** ERROR: defrag failed on /opt/asclock-gtk/bin/asclock: Text file busy
+    ** ERROR: defrag failed on /opt/firefox/firefox-bin: Text file busy
+    ** ERROR: defrag failed on /opt/oracle/mydesktop/mydesktopservice: Text file busy
+    ** total 3 failures
+    ** Exit code 1
+
+5. Done
+
+       Ended    2019-01-04 14:07:15.318855
+       Started  2019-01-04 14:05:47.118744
+       Duration 0:01:28.200111
