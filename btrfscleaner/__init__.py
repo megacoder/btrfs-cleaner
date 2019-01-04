@@ -197,11 +197,14 @@ class	BtrfsCleaner( object ):
 		prog = os.path.splitext(
 			os.path.basename( sys.argv[0] )
 		)[0]
+		if prog == '__init__':
+			prog = 'btrfs-cleaner-bis'
 		p = argparse.ArgumentParser(
 			prog        = prog,
 			description = '''\
 				Scrub btrfs filesystems in background
 			''',
+			formatter_class = argparse.ArgumentDefaultsHelpFormatter,
 			epilog = '''\
 				If no action (defrag, balance, or scrub) is specified then
 				all three actions will be performed.
