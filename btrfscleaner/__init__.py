@@ -149,6 +149,50 @@ class	BtrfsCleaner( object ):
 		self.show( output, err )
 		return
 
+	def	do_free( self, mp ):
+		# Defrag
+		cmd = [
+			'/sbin/btrfs',
+			'filesystem',
+			'df',
+			'--iec',
+			mp
+		]
+		output, err = self.run( cmd )
+		self.show( output, err )
+		return
+
+	def	do_df( self, mp = None ):
+		if not mp:
+			mp = self.opts.filesystems
+		cmd = [
+			'/sbin/btrfs',
+			'filesystem',
+			'du',
+			'-s',
+			'--iec',
+		] + sorted( mp )
+		output, err = self.run( cmd )
+		self.show( output, err )
+		return
+
+	def	section( self, title, banner = None, step = True ):
+		if step:
+			self.step += 1
+			leadin = '{0}. '.format( self.step )
+		else:
+			leadin = ''
+			self.step = 0
+		print
+		print '{0}{1}'.format( leadin, title )
+		if banner:
+			print '{0}{1}'.format(
+				' ' * len( leadin ),
+				banner * len( title ),
+			)
+		print
+		return
+
 	def	main( self ):
 		prog = os.path.splitext(
 			os.path.basename( sys.argv[0] )
@@ -260,6 +304,8 @@ class	BtrfsCleaner( object ):
 		title = 'BTRFS Cleaning'
 		print title
 		print '=' * len( title )
+		self.section( 'Filesystems Under Scrutiny', step = False )
+		self.do_df()
 		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
 			if mp not in active_mounts:
@@ -267,33 +313,29 @@ class	BtrfsCleaner( object ):
 					mp
 				)
 				continue
-			title = 'Mountpoint: {0}'.format( mp )
 			print
-			print
-			print title
-			print '-' * len( title )
-			step = 0
+			self.section(
+				'Mountpoint "{0}"'.format( mp ),
+				banner = '-',
+				step = False,
+			)
+			# Identify the btrfs filesystem of current interest.
+			self.section( 'Current Metadata' )
+			self.do_free( mp )
 			# Make sure we can belive the filesystem metadata
 			if self.opts.scrub:
-				step += 1
-				print
-				print '{0}. Scrubbing'.format( step )
-				print
+				self.section( 'Scrubbing' )
 				self.do_scrub( mp )
 			# Repack the filesystem to maximize free space
 			if self.opts.balance:
-				step += 1
-				print
-				print '{0}. Balancing'.format( step )
-				print
+				self.section( 'Balancing' )
 				self.do_balance( mp )
 			# Consolidate file disk usage
 			if self.opts.defrag:
-				step += 1
-				print
-				print '{0}. Defragmenting'.format( step )
-				print
+				self.section( 'Defragmenting (expect errors)' )
 				self.do_defrag( mp )
+			#
+			self.section( 'Done' )
 		return 0
 
 if __name__ == '__main__':
