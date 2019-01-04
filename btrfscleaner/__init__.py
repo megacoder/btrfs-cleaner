@@ -17,12 +17,12 @@ except:
 
 class	BtrfsCleaner( object ):
 
-	def	fmt_code( self, s ):
+	def	indent( self, s ):
 		return '    {0}'.format( s )
 
 	def	log( self, s, pri = syslog.LOG_ERR ):
 		if self.out:
-			print >>self.out, self.fmt_code( s )
+			print >>self.out, self.indent( s )
 		syslog.syslog( pri, s )
 		return
 
@@ -92,16 +92,20 @@ class	BtrfsCleaner( object ):
 				raise e
 		return output, err
 
+	def	printLn( self, s = '' ):
+		print >>self.out, s
+		return
+
 	def	show( self, output = None, err = None ):
 		fmt = '{0:<2} {1}'
-		if output and len(output):
+		if output:
 			for part in output:
 				for line in part.splitlines():
-					print self.fmt_code( fmt.format( '', line ) )
-		if err and len(err):
+					self.printLn( self.indent( fmt.format( '', line ) ) )
+		if err:
 			for part in err:
 				for line in part.splitlines():
-					print self.fmt_code( fmt.format( '**', line ) )
+					self.printLn( self.indent( fmt.format( '**', line ) ) )
 		return
 
 	def	report( self ):
@@ -190,14 +194,11 @@ class	BtrfsCleaner( object ):
 		else:
 			leadin = ''
 			self.step = 0
-		print
-		print '{0}{1}'.format( leadin, title )
+		print >>self.out
+		print >>self.out, '{0}{1}'.format( leadin, title )
 		if banner:
-			print '{0}{1}'.format(
-				' ' * len( leadin ),
-				banner * len( title ),
-			)
-		print
+			print >>self.out, '{0}{1}'.format( '', banner * len( title ) )
+		print >>self.out
 		return
 
 	def	main( self ):
@@ -312,11 +313,16 @@ class	BtrfsCleaner( object ):
 					)
 				exit( 1 )
 		#
+		# Here we go
+		#
 		title = 'BTRFS Cleaning'
-		print title
-		print '=' * len( title )
+		self.printLn( title )
+		self.printLn( '=' * len( title ) )
+		self.printLn( '')
+		# Make an establishing shot
 		self.section( 'Filesystems Under Scrutiny', step = False )
 		self.do_du()
+		#
 		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
 			time_started = datetime.datetime.now()
@@ -325,7 +331,6 @@ class	BtrfsCleaner( object ):
 					mp
 				)
 				continue
-			print
 			self.section(
 				'Mountpoint "{0}"'.format( mp ),
 				banner = '-',
@@ -349,12 +354,12 @@ class	BtrfsCleaner( object ):
 			#
 			self.section( 'Done' )
 			time_ended = datetime.datetime.now()
-			time_span = time_ended - time_started
-			fmt = '{0:<8} {1}'
-			output = [
-				fmt.format( 'Ended', time_ended ),
-				fmt.format( 'Started', time_started ),
-				fmt.format( 'Duration', time_span ),
+			time_span  = time_ended - time_started
+			fmt        = '{0:<8} {1}'
+			output     = [
+				fmt.format( 'Ended',    time_ended	 ),
+				fmt.format( 'Started',  time_started ),
+				fmt.format( 'Duration', time_span	 ),
 			]
 			self.show(
 				output = output,
