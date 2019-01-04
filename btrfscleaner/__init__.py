@@ -149,7 +149,7 @@ class	BtrfsCleaner( object ):
 		self.show( output, err )
 		return
 
-	def	do_free( self, mp ):
+	def	do_df( self, mp ):
 		# Defrag
 		cmd = [
 			'/sbin/btrfs',
@@ -324,7 +324,7 @@ class	BtrfsCleaner( object ):
 			)
 			# Identify the btrfs filesystem of current interest.
 			self.section( 'Current Metadata' )
-			self.do_free( mp )
+			self.do_df( mp )
 			# Make sure we can belive the filesystem metadata
 			if self.opts.scrub:
 				self.section( 'Scrubbing' )
