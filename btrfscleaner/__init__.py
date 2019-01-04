@@ -3,6 +3,7 @@
 
 import	argparse
 import	bunch
+import	datetime
 import	os
 import	shlex
 import	subprocess
@@ -60,31 +61,34 @@ class	BtrfsCleaner( object ):
 		self.opts.filled = "1 2 3 5 7 10 15 20 30 40 50 60 70 80 90 100"
 		return
 
-	def	run( self, cmd ):
+	def	run( self, cmd, prolog = None ):
 		cli = '{0} {1}'.format(
 			'$' if os.getuid() else '#',
 			' '.join( cmd )
 		)
-		err = None
+		err    = None
+		if not prolog:
+			prolog = list()
+		elif type(prolog) != list:
+			prolog = [ prolog ]
+		output = prolog
 		if self.opts.dont:
-			output = [ cli ]
+			output.append( cli )
 		else:
-			output = []
 			if self.opts.verbose:
-				output += [ cli ]
+				output.append( cli )
 			try:
-				output += [
-					subprocess.check_output(
-						cmd,
-						stderr = subprocess.STDOUT,
-					)
-				]
+				s = subprocess.check_output(
+					cmd,
+					stderr = subprocess.STDOUT,
+				)
+				output.append( s )
 			except subprocess.CalledProcessError, e:
 				err = [ e.output ] +  [
 					'Exit code {0}'.format( e.returncode ),
 				]
 			except Exception, e:
-				print '*** {0}:{1} ***'.format( e.returncode, e.output )
+				print '*** EXCEPTION {0}'.format( e )
 				raise e
 		return output, err
 
@@ -131,7 +135,10 @@ class	BtrfsCleaner( object ):
 #				'-mlimit=32',
 				mp
 			]
-			output, err = self.run( cmd )
+			output, err = self.run(
+				cmd,
+				prolog = 'Balancing {0}% usage'.format( fill ),
+			)
 			self.show( output, err )
 		return
 
@@ -162,7 +169,7 @@ class	BtrfsCleaner( object ):
 		self.show( output, err )
 		return
 
-	def	do_df( self, mp = None ):
+	def	do_du( self, mp = None ):
 		if not mp:
 			mp = self.opts.filesystems
 		cmd = [
@@ -291,7 +298,8 @@ class	BtrfsCleaner( object ):
 			self.opts.balance = True
 			self.opts.defrag  = True
 			self.opts.scrub   = True
-		#
+		# For balancing, convert the space-delimited list of
+		# usage thresholds into a list of numbers.
 		if self.opts.balance:
 			try:
 				a = [
@@ -308,9 +316,10 @@ class	BtrfsCleaner( object ):
 		print title
 		print '=' * len( title )
 		self.section( 'Filesystems Under Scrutiny', step = False )
-		self.do_df()
+		self.do_du()
 		uuids_already_processed = dict()
 		for mp in sorted( self.opts.filesystems ):
+			time_started = datetime.datetime.now()
 			if mp not in active_mounts:
 				print >>sys.stderr, 'Not a mount point: {0}'.format(
 					mp
@@ -322,13 +331,13 @@ class	BtrfsCleaner( object ):
 				banner = '-',
 				step = False,
 			)
-			# Identify the btrfs filesystem of current interest.
-			self.section( 'Current Metadata' )
-			self.do_df( mp )
 			# Make sure we can belive the filesystem metadata
 			if self.opts.scrub:
 				self.section( 'Scrubbing' )
 				self.do_scrub( mp )
+			# Be awesome
+			self.section( 'Filesystem Topology' )
+			self.do_df( mp )
 			# Repack the filesystem to maximize free space
 			if self.opts.balance:
 				self.section( 'Balancing' )
@@ -339,6 +348,17 @@ class	BtrfsCleaner( object ):
 				self.do_defrag( mp )
 			#
 			self.section( 'Done' )
+			time_ended = datetime.datetime.now()
+			time_span = time_ended - time_started
+			fmt = '{0:<8} {1}'
+			output = [
+				fmt.format( 'Ended', time_ended ),
+				fmt.format( 'Started', time_started ),
+				fmt.format( 'Duration', time_span ),
+			]
+			self.show(
+				output = output,
+			)
 		return 0
 
 if __name__ == '__main__':
