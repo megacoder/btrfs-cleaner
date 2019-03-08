@@ -1,2 +1,4 @@
 include btrfscleaner/scripts/btrfs-cleaner
 include README.md
+include crontab
+include ChangeLog
