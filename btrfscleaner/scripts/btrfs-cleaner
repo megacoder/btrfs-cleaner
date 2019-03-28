@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+# vim: nonu noet ai sm ts=4 sw=4
+
+if __name__ == '__main__':
+	import	btrfscleaner
+	exit( btrfscleaner.BtrfsCleaner().main() )

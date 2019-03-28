@@ -1,0 +1,8 @@
+# vim: noet sw=8 ts=8 nu
+SHELL=${SHELL}
+MAILTO=${USER}
+
+#	mn	hr	dom	mon	dow	cmd
+#	--	--   	---	---	---	----------------------------
+
+	51	20	 *	 *	 *	/bin/btrfs-cleaner

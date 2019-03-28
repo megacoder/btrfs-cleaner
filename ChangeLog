@@ -1,0 +1,66 @@
+* Fri Mar 8 2019 Tommy Reynolds
+- (a5f9c7a) Sample cron(1) entry (HEAD, ro/master, origin/master, origin/HEAD, master)
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (784e820) Show example actions.
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (dd2b61c) Write output to the 'ofile', everywhere. (tag: v0.0.7)
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (54937ab) Calculate processing times. (tag: v0.0.6)
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (40070c4) Changed method name to be more accurate.
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (55a6566) Show default values if '--help' is used.
+
+* Fri Jan 4 2019 Tommy Reynolds
+- (5414202) Show initial geometry; added 'df' info; prettier.
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (eeeb315) Bumped (tag: v0.0.3)
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (9344ed5) Dropped all the bother about crosschecking so much.
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (e421f3d) Modernize bunchers
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (5b515a7) Bump version.
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (95d3547) Do steps in this order: scrub, balance, defrag
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (a9911e2) Corrected error message not being written to stderr.
+
+* Thu Jan 3 2019 Tommy Reynolds
+- (035a683) Added balance points
+
+* Wed Feb 28 2018 Tommy Reynolds
+- (fa2217b) Basked of Ignorables.
+
+* Wed Feb 28 2018 Tommy Reynolds
+- (38c0f89) Do steps in a better sequence: scrub, defrag, balance.
+
+* Sun Feb 25 2018 Tommy Reynolds
+- (16b7c0d) Checkpoint
+
+* Sat Feb 24 2018 Tommy Reynolds
+- (ead6ebc) History
+
+* Sat Feb 24 2018 Tommy Reynolds
+- (82339ed) Name the runtime script.
+
+* Sat Feb 24 2018 Tommy Reynolds
+- (79c08d4) Mea culpa
+
+* Sat Feb 24 2018 Tommy Reynolds
+- (ff83ce8) Basket of Ignorables
+
+* Sat Feb 24 2018 Tommy Reynolds
+- (ddbf99b) Baseline
+
