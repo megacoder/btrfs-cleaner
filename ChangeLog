@@ -1,5 +1,32 @@
+* Fri Oct 25 2019 Tommy Reynolds
+- (9ef719d) Bump version (HEAD, master)
+
+* Fri Oct 25 2019 Tommy Reynolds
+- (acb28d3) Right-align test times and duration
+
+* Fri Jun 14 2019 Tommy Reynolds
+- (a950504) Imported (origin/master, origin/HEAD)
+
+* Sat Jun 1 2019 Tommy Reynolds
+- (3224f14) Use the socially-acceptible #!/usr/bin/env python2 shebang.
+
+* Thu Mar 28 2019 Tommy Reynolds
+- (484b425) Explain ourselves a bit.
+
+* Thu Mar 28 2019 Tommy Reynolds
+- (e100e1b) Merge branch 'master' of ssh://gmbh.dontconfuse.us:2223/home/vault/depot/btrfs-cleaner
+
+* Thu Mar 28 2019 Tommy Reynolds
+- (9b3030a) Initial commit
+
 * Fri Mar 8 2019 Tommy Reynolds
-- (a5f9c7a) Sample cron(1) entry (HEAD, ro/master, origin/master, origin/HEAD, master)
+- (e5062f7) Changes (tag: v0.0.8)
+
+* Fri Mar 8 2019 Tommy Reynolds
+- (bf29db2) Additions
+
+* Fri Mar 8 2019 Tommy Reynolds
+- (a5f9c7a) Sample cron(1) entry
 
 * Fri Jan 4 2019 Tommy Reynolds
 - (784e820) Show example actions.
