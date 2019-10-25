@@ -355,11 +355,11 @@ class	BtrfsCleaner( object ):
 			self.section( 'Done' )
 			time_ended = datetime.datetime.now()
 			time_span  = time_ended - time_started
-			fmt        = '{0:<8} {1}'
+			fmt        = '{0:<8} {1:>27}'
 			output     = [
-				fmt.format( 'Ended',    time_ended	 ),
-				fmt.format( 'Started',  time_started ),
-				fmt.format( 'Duration', time_span	 ),
+				fmt.format( 'Ended',    str( time_ended )	),
+				fmt.format( 'Started',  str( time_started )	),
+				fmt.format( 'Duration', str( time_span )	),
 			]
 			self.show(
 				output = output,
