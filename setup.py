@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 Name    = 'btrfscleaner'
 Runtime	= 'btrfs-cleaner'
-Version = '0.0.7'
+Version = '0.1.0'
 
 with open( '{0}/version.py'.format( Name ), 'wt' ) as f:
     print( 'Version = "{0}"'.format( Version ), file = f )
