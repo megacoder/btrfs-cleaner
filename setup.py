@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: nonu noet ai sm ts=4 sw=4
 
 from setuptools import setup, find_packages
@@ -8,7 +8,7 @@ Runtime	= 'btrfs-cleaner'
 Version = '0.0.7'
 
 with open( '{0}/version.py'.format( Name ), 'wt' ) as f:
-    print >>f, 'Version = "{0}"'.format( Version )
+    print( 'Version = "{0}"'.format( Version ), file = f )
 
 setup(
     name				= Name,
