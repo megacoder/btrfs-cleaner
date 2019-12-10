@@ -1,8 +1,12 @@
 #!/usr/bin/python
 # vim: filetype=python noet sw=4 ts=4
 
+try:
+	import	bunch
+except:
+	import	btrfscleaner.bunch
+
 import	argparse
-import	bunch
 import	datetime
 import	os
 import	shlex
@@ -17,13 +21,31 @@ except:
 
 class	BtrfsCleaner( object ):
 
-	def	indent( self, s ):
-		return '    {0}'.format( s )
+	def	bytes2str( self, b ):
+		return str( b.decode( "utf-8" ) ) if isinstance( b, bytes ) else b
 
-	def	log( self, s, pri = syslog.LOG_ERR ):
+	def	printLn( self, s = '\n' ):
+		if isinstance( s, list ):
+			for part in s:
+				self.printLn( part )
+		else:
+			for line in s.splitlines():
+				print(
+					self.bytes2str( line ),
+					file = self.out if self.out else sys.stdout
+				)
+		return
+
+	def	indent( self, s ):
+		return '    {0}'.format( self.bytes2str( s ) )
+
+	def	log( self, s, priority = syslog.LOG_ERR ):
 		if self.out:
-			print >>self.out, self.indent( s )
-		syslog.syslog( pri, s )
+			print(
+				'{0}'.format( self.indent( s ) ),
+				file = self.out
+			)
+		syslog.syslog( priority, s )
 		return
 
 	def	new_node( self, where = None, dev = None ):
@@ -39,14 +61,15 @@ class	BtrfsCleaner( object ):
 				str.split,
 				f.readlines(),
 			)
-		mounts[:] = [
+		new_mounts  = [
 			m[1] for m in mounts if m[2] == 'btrfs'
 		]
-		# print 'mounts={0}'.format( mounts )
-		return mounts
+		# print 'new_mounts={0}'.format( new_mounts )
+		return new_mounts
 
 	def	__init__(
-		self
+		self,
+		out = sys.stdout
 	):
 		# Get logging setup early
 		syslog.openlog(
@@ -54,7 +77,7 @@ class	BtrfsCleaner( object ):
 			syslog.LOG_PID,
 			syslog.LOG_DAEMON,
 		)
-		self.out         = None
+		self.out         = out
 		# Record simple options
 		self.opts        = bunch.Bunch()
 		self.opts.dont   = False
@@ -83,29 +106,36 @@ class	BtrfsCleaner( object ):
 					stderr = subprocess.STDOUT,
 				)
 				output.append( s )
-			except subprocess.CalledProcessError, e:
-				err = [ e.output ] +  [
-					'Exit code {0}'.format( e.returncode ),
+			except subprocess.CalledProcessError as e:
+				err = [ self.bytes2str( e.output ) ] +  [
+					'Subprocess exit code {0}'.format( e.returncode ),
 				]
-			except Exception, e:
-				print '*** EXCEPTION {0}'.format( e )
+			except Exception as e:
+				print( '*** EXCEPTION {0}'.format( e ), file = sys.stderr )
 				raise e
 		return output, err
 
-	def	printLn( self, s = '' ):
-		print >>self.out, s
+	def	_show( self, stuff, leadin = '' ):
+		fmt = '{0:<2} {1}'
+		for part in stuff:
+			for line in part.splitlines():
+				self.printLn(
+					self.indent(
+						fmt.format(
+							leadin,
+							self.bytes2str( line ),
+						)
+					)
+				)
+				pass
+			pass
 		return
 
 	def	show( self, output = None, err = None ):
-		fmt = '{0:<2} {1}'
 		if output:
-			for part in output:
-				for line in part.splitlines():
-					self.printLn( self.indent( fmt.format( '', line ) ) )
+			self._show( output )
 		if err:
-			for part in err:
-				for line in part.splitlines():
-					self.printLn( self.indent( fmt.format( '**', line ) ) )
+			self._show( err, leadin = '**' )
 		return
 
 	def	report( self ):
@@ -194,11 +224,15 @@ class	BtrfsCleaner( object ):
 		else:
 			leadin = ''
 			self.step = 0
-		print >>self.out
-		print >>self.out, '{0}{1}'.format( leadin, title )
+		self.printLn()
+		self.printLn(
+			'{0}{1}'.format( leadin, title )
+		)
 		if banner:
-			print >>self.out, '{0}{1}'.format( '', banner * len( title ) )
-		print >>self.out
+			self.printLn(
+				'{0}{1}'.format( '', banner * len( title ) )
+			)
+		self.printLn()
 		return
 
 	def	main( self ):
@@ -282,7 +316,9 @@ class	BtrfsCleaner( object ):
 		)
 		self.opts = p.parse_args()
 		if os.getuid() != 0:
-			print >>sys.stderr, 'Not running as root; expect troubles.'
+			print(
+				'Not running as root; expect troubles.'
+			)
 		#
 		ofile = self.opts.ofile
 		self.out = open( ofile, 'wt' ) if ofile else sys.stdout
@@ -308,9 +344,12 @@ class	BtrfsCleaner( object ):
 				]
 				self.opts.filled = a
 			except:
-				print >>sys.stderr, 'Balance points must be numeric: {0}'.format(
+				print(
+					'Balance points must be numeric: {0}'.format(
 						self.opts.filled,
-					)
+					),
+					file = sys.stderr
+				)
 				exit( 1 )
 		#
 		# Here we go
@@ -318,7 +357,7 @@ class	BtrfsCleaner( object ):
 		title = 'BTRFS Cleaning'
 		self.printLn( title )
 		self.printLn( '=' * len( title ) )
-		self.printLn( '')
+		self.printLn()
 		# Make an establishing shot
 		self.section( 'Filesystems Under Scrutiny', step = False )
 		self.do_du()
@@ -327,8 +366,11 @@ class	BtrfsCleaner( object ):
 		for mp in sorted( self.opts.filesystems ):
 			time_started = datetime.datetime.now()
 			if mp not in active_mounts:
-				print >>sys.stderr, 'Not a mount point: {0}'.format(
-					mp
+				print(
+					'Not a mount point: {0}'.format(
+						mp
+					),
+					file = sys.stderr
 				)
 				continue
 			self.section(
@@ -354,12 +396,16 @@ class	BtrfsCleaner( object ):
 			#
 			self.section( 'Done' )
 			time_ended = datetime.datetime.now()
-			time_span  = time_ended - time_started
-			fmt        = '{0:<8} {1}'
+			time_span  = str( time_ended - time_started )
+			fmt        = '{0:<9} {1}'
 			output     = [
-				fmt.format( 'Ended',    time_ended	 ),
-				fmt.format( 'Started',  time_started ),
-				fmt.format( 'Duration', time_span	 ),
+				fmt.format( 'Ended:',    time_ended	 ),
+				fmt.format( 'Started:',  time_started ),
+				fmt.format(
+					'Duration:',
+					' ' * (len( str( time_ended )) - len( time_span )) +
+					time_span
+				),
 			]
 			self.show(
 				output = output,
