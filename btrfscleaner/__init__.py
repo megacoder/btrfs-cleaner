@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # vim: filetype=python noet sw=4 ts=4
 
 try:
@@ -40,11 +40,10 @@ class	BtrfsCleaner( object ):
 		return '    {0}'.format( self.bytes2str( s ) )
 
 	def	log( self, s, priority = syslog.LOG_ERR ):
-		if self.out:
-			print(
-				'{0}'.format( self.indent( s ) ),
-				file = self.out
-			)
+		print(
+			'{0}'.format( self.indent( s ) ),
+			file = self.out if self.out else sys.stderr
+		)
 		syslog.syslog( priority, s )
 		return
 
@@ -396,16 +395,12 @@ class	BtrfsCleaner( object ):
 			#
 			self.section( 'Done' )
 			time_ended = datetime.datetime.now()
-			time_span  = str( time_ended - time_started )
-			fmt        = '{0:<9} {1}'
+			time_span  = time_ended - time_started
+			fmt        = '{0:<8} {1:>27}'
 			output     = [
-				fmt.format( 'Ended:',    time_ended	 ),
-				fmt.format( 'Started:',  time_started ),
-				fmt.format(
-					'Duration:',
-					' ' * (len( str( time_ended )) - len( time_span )) +
-					time_span
-				),
+				fmt.format( 'Ended',    str( time_ended )	),
+				fmt.format( 'Started',  str( time_started )	),
+				fmt.format( 'Duration', str( time_span )	),
 			]
 			self.show(
 				output = output,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # vim: nonu noet ai sm ts=4 sw=4
 
 from setuptools import setup, find_packages
